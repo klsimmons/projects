@@ -26,11 +26,11 @@ end
 class Board
   def initialize
     @size = 100
-    @board = ([Tile.new(AIR)] * 80) + ([Tile.new(GROUND)] * 20)
+    @board = 80.times.map { Tile.new(AIR) } + 20.times.map { Tile.new(GROUND) }
   end
 
   def place(item, index)
-    @board[index] = item
+    @board[index].content = item
   end
 
   def draw
@@ -39,10 +39,9 @@ class Board
     puts ''
   end
 
-  def replace(index)
-    unless @board[index] == Player # || @board[index] == Obstacle
-      @board[index] = self
-    end
+  def move(i1, i2)
+    @board[i2].content = @board[i1].content
+    @board[i1].content = nil
   end
 end
 
@@ -67,34 +66,43 @@ class Obstacle
   end
 
   def scroll
-    until @position == 80
-      @position -= 1
-    end
+    @position -= 1
   end
+
 end
 
 def jump(board, player)
   2.times do
     sleep(T)
-    player.move_up
-    board.place(player.avatar, player.position)
-    board.replace(player.position + 20)
+    board.move(player.position, player.move_up)
     board.draw
   end
   2.times do
     sleep(T)
-    player.move_down
-    board.place(player.avatar, player.position)
-    board.replace(player.position - 20)
+    board.move(player.position, player.move_down)
     board.draw
   end
 end
 
+def scroll(board, obstacle)
+  19.times do
+    sleep(T)
+    board.move(obstacle.position, obstacle.scroll)
+    board.draw
+  end
+  obstacle.position.content = nil
+  board.draw
+end
+
 player = Player.new
 board = Board.new
+obstacle = Obstacle.new
+board.place(obstacle.avatar, obstacle.position)
 board.place(player.avatar, player.position)
 board.draw
-jump(board, player)
+#jump(board, player)
+scroll(board, obstacle)
+
 
 
 
