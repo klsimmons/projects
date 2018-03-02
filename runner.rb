@@ -17,7 +17,11 @@ class Player
     @avatar = avatar
     @moving = -1
 
-    @board.place(@avatar, @position)
+    @board.place(self, @position)
+  end
+
+  def to_s
+    @avatar
   end
 
   def move_up
@@ -43,6 +47,8 @@ class Player
 end
 
 class Board
+  attr_reader :board
+
   def initialize
     @size = 100
     @board = 80.times.map { Tile.new(AIR) } + 20.times.map { Tile.new(GROUND) }
@@ -63,13 +69,17 @@ class Board
 
   def draw
     system 'clear' or system 'cls'
-    @board.each_slice(20) { |tiles| puts tiles.join(' ') }
+    @board.each_slice(20) { |tiles| puts tiles.map(&:to_s).join(' ') }
     puts ''
   end
 
   def move(i1, i2)
     @board[i2].content = @board[i1].content
     @board[i1].content = nil
+  end
+
+  def next
+    @board.select(&:content).each { |tile| tile.content.next }
   end
 end
 
@@ -81,22 +91,32 @@ class Tile
   end
 
   def to_s
-    @content == nil ? @type : @content
+    @content.nil? ? @type : @content
   end
 end
 
 class Obstacle
+  attr_accessor :moving
   attr_reader :position, :avatar
 
-  def initialize(position = 99)
+  def initialize(board, position = 99)
     @position = position
     @avatar = OBSTACLE
+    @board = board
+    @board.place(self, @position)
+  end
+
+  def to_s
+    @avatar
   end
 
   def scroll
     @position -= 1
   end
 
+  def next
+    @board.move(@position, scroll)
+  end
 end
 
 def jump(board, player)
@@ -133,14 +153,21 @@ end
 
 board = Board.new
 player = Player.new(board)
-obstacle = Obstacle.new #(board)
-board.place(obstacle.avatar, obstacle.position)
-board.draw
+obstacle = Obstacle.new(board)
+player.moving = 0
+
+4.times do |x|
+  sleep(T)
+  #board.board[0].content = x
+  board.board.select(&:content).each do |tile|
+    tile.content.next
+  end
+  board.draw
+end
+
 #jump(board, player)
-jump2(board,player)
+#jump2(board,player)
 #scroll(board, obstacle)
-
-
 
 
 def numbers
