@@ -18,6 +18,10 @@ class Obstacle
   end
 
   def next
-    @board.move(@position, scroll)
+    if @position % 20 == 0
+      @board[@position].content = nil
+    else
+      @board.move(@position, scroll)
+    end
   end
 end
